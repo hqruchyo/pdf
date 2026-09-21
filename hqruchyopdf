@@ -1,0 +1,497 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>HQRUCHYO - Webtoon & Image to Custom PDF</title>
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- pdf-lib -->
+    <script src="https://unpkg.com/pdf-lib@1.17.1/dist/pdf-lib.min.js"></script>
+    <!-- JSZip -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
+    <!-- SortableJS -->
+    <script src="https://cdn.jsdelivr.net/npm/sortablejs@latest/Sortable.min.js"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        body { font-family: 'Inter', sans-serif; margin: 0; padding: 0; min-height: 100vh; overflow-x: hidden; }
+        
+        /* Background Aesthetic Soft Blue */
+        #ocean-bg {
+            position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+            background: linear-gradient(180deg, #dbeafe 0%, #bae6fd 50%, #7dd3fc 100%);
+            z-index: -1; pointer-events: none; overflow: hidden;
+        }
+
+        /* Bubble Animations */
+        .bubble {
+            position: absolute; background: rgba(255, 255, 255, 0.4); border-radius: 50%;
+            bottom: -50px; animation: rise infinite ease-in;
+        }
+        @keyframes rise {
+            0% { transform: translateY(0) scale(1); opacity: 0; }
+            20% { opacity: 1; }
+            100% { transform: translateY(-120vh) scale(1.5); opacity: 0; }
+        }
+
+        /* Jellyfish Animations */
+        .jellyfish { position: absolute; animation: jelly-float infinite alternate ease-in-out; }
+        @keyframes jelly-float {
+            0% { transform: translateY(0) scale(0.95); }
+            100% { transform: translateY(-40px) scale(1.05); }
+        }
+
+        /* Fish Animations */
+        .fish-l2r { position: absolute; animation: swim-l2r infinite linear; }
+        .fish-r2l { position: absolute; animation: swim-r2l infinite linear; }
+        @keyframes swim-l2r {
+            0% { left: -10%; transform: translateY(0); }
+            50% { transform: translateY(-20px); }
+            100% { left: 110%; transform: translateY(0); }
+        }
+        @keyframes swim-r2l {
+            0% { right: -10%; transform: translateY(0); }
+            50% { transform: translateY(20px); }
+            100% { right: 110%; transform: translateY(0); }
+        }
+
+        /* Seaweed Sway */
+        .seaweed {
+            position: absolute; bottom: 0; transform-origin: bottom center;
+            animation: sway 3s infinite alternate ease-in-out;
+        }
+        @keyframes sway {
+            from { transform: rotate(-8deg); }
+            to { transform: rotate(8deg); }
+        }
+
+        /* UI Styles */
+        .main-card { background: rgba(255, 255, 255, 0.92); backdrop-filter: blur(10px); }
+        .drop-zone { border: 2px dashed #93c5fd; transition: all 0.2s ease; background: rgba(248, 250, 252, 0.7); }
+        .drop-zone.dragover { border-color: #3b82f6; background-color: #eff6ff; }
+        .file-item { transition: all 0.2s; }
+        .sortable-ghost { opacity: 0.3; background-color: #e0f2fe; }
+        .drag-handle { cursor: grab; }
+        .drag-handle:active { cursor: grabbing; }
+        
+        #toast { opacity: 0; transform: translateY(20px); transition: all 0.3s cubic-bezier(0.68, -0.55, 0.265, 1.55); pointer-events: none; }
+        #toast.show { opacity: 1; transform: translateY(0); pointer-events: auto; }
+        .loader { border: 3px solid rgba(255,255,255,0.3); border-top: 3px solid #ffffff; border-radius: 50%; width: 20px; height: 20px; animation: spin 1s linear infinite; display: none; }
+        @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
+        
+        .queue-container::-webkit-scrollbar { width: 6px; }
+        .queue-container::-webkit-scrollbar-track { background: transparent; }
+        .queue-container::-webkit-scrollbar-thumb { background: #bae6fd; border-radius: 10px; }
+    </style>
+</head>
+<body class="text-slate-800 flex flex-col items-center py-8 px-4 sm:px-6 relative">
+
+    <!-- CSS Animated Background (No Emojis!) -->
+    <div id="ocean-bg">
+        <!-- Bubbles -->
+        <div class="bubble" style="width: 25px; height: 25px; left: 15%; animation-duration: 8s; animation-delay: 1s;"></div>
+        <div class="bubble" style="width: 15px; height: 15px; left: 40%; animation-duration: 6s; animation-delay: 3s;"></div>
+        <div class="bubble" style="width: 30px; height: 30px; left: 60%; animation-duration: 10s; animation-delay: 0s;"></div>
+        <div class="bubble" style="width: 20px; height: 20px; left: 85%; animation-duration: 7s; animation-delay: 4s;"></div>
+
+        <!-- Jellyfishes -->
+        <div class="jellyfish" style="top: 20%; left: 10%; animation-duration: 6s;">
+            <svg width="60" height="80" viewBox="0 0 60 80">
+                <path d="M10,40 C10,10 50,10 50,40 Z" fill="#fbcfe8" opacity="0.7"/>
+                <path d="M20,40 Q15,60 20,80" stroke="#fbcfe8" fill="none" stroke-width="3" opacity="0.8"/>
+                <path d="M30,40 Q25,60 30,80" stroke="#fbcfe8" fill="none" stroke-width="3" opacity="0.8"/>
+                <path d="M40,40 Q45,60 40,80" stroke="#fbcfe8" fill="none" stroke-width="3" opacity="0.8"/>
+            </svg>
+        </div>
+        <div class="jellyfish" style="top: 60%; right: 15%; animation-duration: 8s; animation-delay: 1s;">
+            <svg width="50" height="70" viewBox="0 0 60 80">
+                <path d="M10,40 C10,10 50,10 50,40 Z" fill="#c4b5fd" opacity="0.7"/>
+                <path d="M20,40 Q15,60 20,80" stroke="#c4b5fd" fill="none" stroke-width="3" opacity="0.8"/>
+                <path d="M30,40 Q35,60 30,80" stroke="#c4b5fd" fill="none" stroke-width="3" opacity="0.8"/>
+                <path d="M40,40 Q45,60 40,80" stroke="#c4b5fd" fill="none" stroke-width="3" opacity="0.8"/>
+            </svg>
+        </div>
+
+        <!-- Fishes -->
+        <div class="fish-l2r" style="top: 30%; animation-duration: 15s;">
+            <svg width="40" height="20" viewBox="0 0 40 20">
+              <ellipse cx="25" cy="10" rx="15" ry="7" fill="#60a5fa" />
+              <polygon points="0,4 0,16 12,10" fill="#60a5fa" />
+            </svg>
+        </div>
+        <div class="fish-r2l" style="top: 75%; animation-duration: 18s; animation-delay: 4s;">
+            <svg width="40" height="20" viewBox="0 0 40 20">
+              <ellipse cx="15" cy="10" rx="15" ry="7" fill="#818cf8" />
+              <polygon points="40,4 40,16 28,10" fill="#818cf8" />
+            </svg>
+        </div>
+
+        <!-- Seaweeds & Corals -->
+        <div class="seaweed" style="left: 8%;">
+            <svg width="40" height="120" viewBox="0 0 40 120">
+                <path d="M20,120 Q0,90 20,60 T20,0" stroke="#10b981" fill="none" stroke-width="6" stroke-linecap="round"/>
+                <path d="M20,100 Q35,80 15,50" stroke="#34d399" fill="none" stroke-width="4" stroke-linecap="round"/>
+            </svg>
+        </div>
+        <div class="seaweed" style="left: 15%; animation-delay: 0.5s;">
+            <svg width="30" height="90" viewBox="0 0 30 90">
+                <path d="M15,90 Q30,60 15,30 T15,0" stroke="#059669" fill="none" stroke-width="5" stroke-linecap="round"/>
+            </svg>
+        </div>
+        <div class="seaweed" style="right: 12%;">
+            <svg width="45" height="130" viewBox="0 0 45 130">
+                <path d="M22,130 Q5,100 22,70 T22,10" stroke="#10b981" fill="none" stroke-width="7" stroke-linecap="round"/>
+                <path d="M22,110 Q40,90 20,60" stroke="#34d399" fill="none" stroke-width="5" stroke-linecap="round"/>
+            </svg>
+        </div>
+    </div>
+
+    <!-- Toast Notification -->
+    <div id="toast" class="fixed bottom-6 left-1/2 transform -translate-x-1/2 z-50 px-6 py-3 rounded-full shadow-2xl font-semibold text-white text-center flex items-center gap-2">
+        <span id="toastIcon"></span>
+        <span id="toastMessage"></span>
+    </div>
+
+    <!-- Main Content -->
+    <div class="w-full max-w-4xl main-card rounded-3xl shadow-2xl border border-white/50 overflow-hidden relative z-10">
+        
+        <!-- Headers Setup -->
+        <div class="bg-gradient-to-r from-blue-900 to-slate-900 p-8 text-center text-white relative">
+            <h2 class="text-xl md:text-2xl font-black text-blue-300 tracking-[0.2em] mb-1">HQRUCHYO PDF</h2>
+            <h1 class="text-3xl sm:text-4xl font-bold flex items-center justify-center gap-3 drop-shadow-md">
+                Webtoon & Image to Custom PDF
+            </h1>
+            <p class="text-blue-100/80 text-sm mt-3 italic max-w-lg mx-auto">hawo ini web pdf buatan heilnox on tele, karena aku malas buat pdf hhwok.</p>
+        </div>
+
+        <div class="p-6 sm:p-8">
+            
+            <!-- Input Grid -->
+            <div class="grid grid-cols-1 sm:grid-cols-3 gap-4 mb-6">
+                <div id="dropZone" class="sm:col-span-2 drop-zone rounded-2xl p-8 text-center relative cursor-pointer flex flex-col justify-center items-center h-44" onclick="document.getElementById('fileInput').click()">
+                    <div class="w-12 h-12 bg-white rounded-full shadow-sm flex items-center justify-center mb-3 pointer-events-none">
+                        <svg class="h-6 w-6 text-blue-600" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/></svg>
+                    </div>
+                    <span class="text-base font-semibold text-slate-700 pointer-events-none">Pilih banyak file atau tarik ke sini</span>
+                    <p class="text-sm text-slate-500 mt-1 pointer-events-none">Mendukung Gambar Panjang (Webtoon), JPG, PNG, PDF, & ZIP</p>
+                    <input type="file" id="fileInput" class="hidden" accept=".jpg,.jpeg,.png,.pdf,.zip" multiple>
+                </div>
+
+                <div class="border border-blue-200/60 rounded-2xl p-6 text-center hover:bg-blue-50/50 transition-colors bg-white/50 relative cursor-pointer flex flex-col justify-center items-center h-44 shadow-sm" onclick="promptDriveUrl()">
+                    <svg class="w-10 h-10 mb-3 text-blue-500 pointer-events-none" fill="currentColor" viewBox="0 0 24 24"><path d="M19.35 10.04C18.67 6.59 15.64 4 12 4 9.11 4 6.6 5.64 5.36 8.04 2.34 8.36 0 10.91 0 14c0 3.31 2.69 6 6 6h13c2.76 0 5-2.24 5-5 0-2.64-2.05-4.78-4.65-4.96zM14 13v4h-4v-4H7l5-5 5 5h-3z"/></svg>
+                    <span class="text-sm font-semibold text-slate-700">Link Cloud / Drive</span>
+                    <span class="text-xs text-slate-500 mt-1">Ambil langsung via URL</span>
+                </div>
+            </div>
+
+            <!-- Clickable Info Quality (Replaces Compress settings) -->
+            <div class="mb-6 p-5 rounded-2xl border border-blue-100 bg-blue-50/70">
+                <h3 class="text-sm font-bold text-blue-900 mb-3 flex items-center gap-2">
+                    <svg class="w-4 h-4 text-blue-600" fill="currentColor" viewBox="0 0 24 24"><path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/></svg>
+                    Info Kualitas (Klik Untuk Detail)
+                </h3>
+                <div class="grid grid-cols-1 sm:grid-cols-3 gap-3">
+                    <button onclick="showToast('Opsi ini untuk HD dan kompres. (Fitur kompres telah dihapus sesuai permintaan!)', 'info')" class="flex flex-col items-start gap-1 p-3 border border-blue-200 bg-white rounded-xl hover:border-blue-400 hover:bg-blue-50 transition-colors shadow-sm text-left">
+                        <span class="font-semibold text-slate-800 text-sm">HD & Kompres</span>
+                        <span class="text-xs text-slate-500">Lihat detail info</span>
+                    </button>
+                    <button onclick="showToast('Ini buat HD maxx - Kualitas sangat tinggi untuk menjaga kejelasan gambar.', 'info')" class="flex flex-col items-start gap-1 p-3 border border-blue-200 bg-white rounded-xl hover:border-blue-400 hover:bg-blue-50 transition-colors shadow-sm text-left">
+                        <span class="font-semibold text-slate-800 text-sm">HD Maxx</span>
+                        <span class="text-xs text-slate-500">Lihat detail info</span>
+                    </button>
+                    <button onclick="showToast('Super maxx HD, sampai jernih keliatan pori! Resolusi 100% Mentah Terjaga.', 'info')" class="flex flex-col items-start gap-1 p-3 border border-blue-400 bg-blue-50 rounded-xl hover:border-blue-500 hover:bg-blue-100 transition-colors shadow-sm text-left relative overflow-hidden">
+                        <span class="absolute top-0 right-0 bg-blue-500 text-white text-[10px] px-2 py-0.5 rounded-bl-lg font-bold">AKTIF</span>
+                        <span class="font-bold text-blue-900 text-sm">Super Maxx HD</span>
+                        <span class="text-xs text-blue-600">Lihat detail info</span>
+                    </button>
+                </div>
+            </div>
+
+            <!-- Queue Section -->
+            <div class="mb-6 border border-blue-100 rounded-2xl overflow-hidden bg-white/80 shadow-sm">
+                <div class="bg-blue-50/50 px-5 py-3 border-b border-blue-100 flex justify-between items-center">
+                    <span class="text-sm font-semibold text-slate-700">Daftar Antrean File (<span id="fileCount">0</span>)</span>
+                    <button onclick="clearQueue()" class="text-xs text-rose-500 hover:text-rose-700 font-medium px-2.5 py-1 rounded-md hover:bg-rose-50 transition-colors">Bersihkan Semua</button>
+                </div>
+                
+                <div class="queue-container max-h-80 overflow-y-auto p-3">
+                    <div id="emptyState" class="text-center py-12 text-slate-400 flex flex-col items-center">
+                        <svg class="w-12 h-12 mb-3 opacity-40 text-blue-300" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 13h6m-3-3v6m5 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path></svg>
+                        Belum ada file yang dipilih. Seret file atau klik area di atas.
+                    </div>
+                    <ul id="fileQueue" class="space-y-2"></ul>
+                </div>
+            </div>
+
+            <button id="processBtn" class="w-full flex justify-center items-center gap-3 py-4 px-4 rounded-2xl shadow-lg shadow-blue-500/30 text-lg font-bold text-white bg-blue-600 hover:bg-blue-700 transition-all disabled:bg-slate-300 disabled:shadow-none disabled:text-slate-500 disabled:cursor-not-allowed">
+                <div class="loader" id="btnLoader"></div>
+                <span id="btnText">Convert ke PDF (Panjang Dinamis) 🚀</span>
+            </button>
+        </div>
+    </div>
+
+    <script>
+        let filesData = []; 
+        const queueEl = document.getElementById('fileQueue');
+        const emptyState = document.getElementById('emptyState');
+        const fileCount = document.getElementById('fileCount');
+
+        function showToast(msg, type = 'success') {
+            const toast = document.getElementById('toast');
+            const icon = document.getElementById('toastIcon');
+            const message = document.getElementById('toastMessage');
+            
+            message.textContent = msg;
+            if (type === 'error') {
+                toast.className = 'fixed bottom-6 left-1/2 transform -translate-x-1/2 z-50 px-6 py-3 rounded-full shadow-2xl font-semibold text-white text-center flex items-center gap-2 show bg-rose-500';
+                icon.innerHTML = '<svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>';
+            } else if (type === 'info') {
+                toast.className = 'fixed bottom-6 left-1/2 transform -translate-x-1/2 z-50 px-6 py-4 rounded-2xl shadow-2xl font-semibold text-white text-center flex items-center gap-3 show bg-blue-600 max-w-sm';
+                icon.innerHTML = '<svg class="w-6 h-6 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>';
+            } else {
+                toast.className = 'fixed bottom-6 left-1/2 transform -translate-x-1/2 z-50 px-6 py-3 rounded-full shadow-2xl font-semibold text-white text-center flex items-center gap-2 show bg-emerald-500';
+                icon.innerHTML = '<svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path></svg>';
+            }
+            
+            // Waktu toast lebih lama untuk info membaca
+            setTimeout(() => { toast.classList.remove('show'); }, type === 'info' ? 5000 : 3000);
+        }
+
+        // Initialize Sortable for drag-and-drop ordering
+        new Sortable(queueEl, {
+            animation: 200,
+            handle: '.drag-handle',
+            ghostClass: 'sortable-ghost',
+            onEnd: function (evt) {
+                const movedItem = filesData.splice(evt.oldIndex, 1)[0];
+                filesData.splice(evt.newIndex, 0, movedItem);
+            }
+        });
+
+        const dropZone = document.getElementById('dropZone');
+        ['dragenter', 'dragover', 'dragleave', 'drop'].forEach(eventName => {
+            dropZone.addEventListener(eventName, preventDefaults, false);
+            document.body.addEventListener(eventName, preventDefaults, false);
+        });
+
+        function preventDefaults(e) { e.preventDefault(); e.stopPropagation(); }
+
+        ['dragenter', 'dragover'].forEach(eventName => {
+            dropZone.addEventListener(eventName, () => dropZone.classList.add('dragover'), false);
+        });
+        ['dragleave', 'drop'].forEach(eventName => {
+            dropZone.addEventListener(eventName, () => dropZone.classList.remove('dragover'), false);
+        });
+
+        dropZone.addEventListener('drop', (e) => {
+            handleFiles(e.dataTransfer.files);
+        });
+
+        document.getElementById('fileInput').addEventListener('change', (e) => {
+            handleFiles(e.target.files);
+            e.target.value = '';
+        });
+
+        async function handleFiles(files) {
+            const fileArray = Array.from(files);
+            if (fileArray.length === 0) return;
+
+            showToast(`Memproses ${fileArray.length} file...`, 'info');
+            
+            for (let file of fileArray) {
+                const ext = file.name.split('.').pop().toLowerCase();
+                if (ext === 'zip') {
+                    try {
+                        const zip = new JSZip();
+                        const zipContent = await zip.loadAsync(file);
+                        for (let filename of Object.keys(zipContent.files)) {
+                            const zipEntry = zipContent.files[filename];
+                            if (!zipEntry.dir) {
+                                const fExt = filename.split('.').pop().toLowerCase();
+                                if (['jpg', 'jpeg', 'png', 'pdf'].includes(fExt)) {
+                                    const blob = await zipEntry.async("blob");
+                                    const arrayBuffer = await blob.arrayBuffer();
+                                    addFileToQueue(filename, arrayBuffer, fExt);
+                                }
+                            }
+                        }
+                    } catch (err) {
+                        showToast(`Gagal membaca zip: ${file.name}`, 'error');
+                    }
+                } else if (['jpg', 'jpeg', 'png', 'pdf'].includes(ext)) {
+                    const arrayBuffer = await file.arrayBuffer();
+                    addFileToQueue(file.name, arrayBuffer, ext);
+                }
+            }
+            renderQueueUI();
+        }
+
+        async function promptDriveUrl() {
+            const url = prompt("Masukkan Direct Link URL file gambar / PDF:");
+            if (!url) return;
+            try {
+                showToast("Mengunduh dari URL...", 'info');
+                const response = await fetch(url);
+                if (!response.ok) throw new Error("Gagal");
+                const arrayBuffer = await response.arrayBuffer();
+                let ext = 'jpg';
+                if (url.toLowerCase().endsWith('.pdf')) ext = 'pdf';
+                else if (url.toLowerCase().endsWith('.png')) ext = 'png';
+                addFileToQueue(`Cloud_File.${ext}`, arrayBuffer, ext);
+                renderQueueUI();
+                showToast("Berhasil ditambahkan!");
+            } catch (err) {
+                showToast("Gagal mengambil dari URL.", 'error');
+            }
+        }
+
+        function addFileToQueue(name, dataBuffer, ext) {
+            filesData.push({
+                id: Date.now() + Math.random().toString(36).substr(2, 9),
+                name: name,
+                type: ext === 'pdf' ? 'pdf' : 'image',
+                ext: ext,
+                data: dataBuffer
+            });
+        }
+
+        function renderQueueUI() {
+            fileCount.innerText = filesData.length;
+            if (filesData.length === 0) {
+                emptyState.style.display = 'flex';
+                queueEl.innerHTML = '';
+                return;
+            }
+            emptyState.style.display = 'none';
+            queueEl.innerHTML = '';
+            
+            filesData.forEach((file) => {
+                const li = document.createElement('li');
+                li.className = 'file-item flex items-center justify-between p-3 bg-white border border-blue-100 rounded-xl shadow-sm hover:shadow-md';
+                const badgeColor = file.type === 'pdf' ? 'bg-rose-500' : 'bg-blue-500';
+                li.innerHTML = `
+                    <div class="flex items-center gap-3 overflow-hidden flex-1">
+                        <div class="drag-handle p-1.5 text-slate-400 hover:text-blue-500 cursor-grab active:cursor-grabbing">
+                            <svg class="w-5 h-5" fill="currentColor" viewBox="0 0 24 24"><path d="M11 18c0 1.1-.9 2-2 2s-2-.9-2-2 .9-2 2-2 2 .9 2 2zm-2-8c-1.1 0-2 .9-2 2s.9 2 2 2 2-.9 2-2-.9-2-2-2zm0-6c-1.1 0-2 .9-2 2s.9 2 2 2 2-.9 2-2-.9-2-2-2zm6 4c1.1 0 2-.9 2-2s-.9-2-2-2-2 .9-2 2 .9 2 2 2zm0 2c-1.1 0-2 .9-2 2s.9 2 2 2 2-.9 2-2-.9-2-2-2zm0 6c-1.1 0-2 .9-2 2s.9 2 2 2 2-.9 2-2-.9-2-2-2z"/></svg>
+                        </div>
+                        <div class="w-10 h-10 flex-shrink-0 flex items-center justify-center rounded-lg ${badgeColor} text-white font-bold text-xs uppercase">
+                            ${file.ext}
+                        </div>
+                        <div class="truncate text-sm font-semibold text-slate-700">${file.name}</div>
+                    </div>
+                    <button onclick="removeFile('${file.id}')" class="text-slate-400 hover:text-rose-500 p-2 rounded-full hover:bg-slate-100 transition-colors ml-2">
+                        <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path></svg>
+                    </button>
+                `;
+                queueEl.appendChild(li);
+            });
+        }
+
+        function removeFile(id) {
+            filesData = filesData.filter(f => f.id !== id);
+            renderQueueUI();
+        }
+
+        function clearQueue() {
+            filesData = [];
+            renderQueueUI();
+        }
+
+        document.getElementById('processBtn').addEventListener('click', async () => {
+            if (filesData.length === 0) {
+                showToast("Antrean kosong! Masukkan gambar/webtoon dulu.", 'error');
+                return;
+            }
+
+            // Meminta Nama PDF Sebelum Mulai Proses
+            let pdfName = prompt("Ketik nama file PDF yang ingin disimpan:", "HQRUCHYO_Custom");
+            
+            // Jika user klik cancel atau kosongkan nama
+            if (pdfName === null || pdfName.trim() === "") {
+                showToast("Proses dibatalkan. Nama PDF harus diisi!", 'error');
+                return;
+            }
+
+            const btn = document.getElementById('processBtn');
+            const loader = document.getElementById('btnLoader');
+            const btnText = document.getElementById('btnText');
+            
+            btn.disabled = true;
+            loader.style.display = 'block';
+
+            try {
+                const { PDFDocument } = PDFLib;
+                const finalPdf = await PDFDocument.create();
+
+                // Standard base width for webtoon/comics in points (e.g. 595.28 points width ~ A4 width)
+                const baseWidth = 595.28;
+
+                for (let i = 0; i < filesData.length; i++) {
+                    const file = filesData[i];
+                    btnText.innerText = `Memproses (${i + 1}/${filesData.length})...`;
+
+                    if (file.type === 'pdf') {
+                        const existingPdf = await PDFDocument.load(file.data);
+                        const copiedPages = await finalPdf.copyPages(existingPdf, existingPdf.getPageIndices());
+                        copiedPages.forEach(page => finalPdf.addPage(page));
+                    } else {
+                        // Kualitas selalu 100% Mentah (Compress dihapus)
+                        let finalBuffer = file.data;
+                        let pdfImage;
+                        
+                        try {
+                            if (file.ext === 'png') {
+                                pdfImage = await finalPdf.embedPng(finalBuffer);
+                            } else {
+                                pdfImage = await finalPdf.embedJpg(finalBuffer);
+                            }
+                        } catch(e) {
+                            pdfImage = await finalPdf.embedJpg(finalBuffer);
+                        }
+
+                        // Dapatkan dimensi asli pixel gambar
+                        const imgW = pdfImage.width;
+                        const imgH = pdfImage.height;
+
+                        // HITUNG TINGGI HALAMAN PDF SECARA DINAMIS (CUSTOM HEIGHT)
+                        // Agar gambar panjang ke bawah (seperti webtoon) tidak terpotong sama sekali
+                        const dynamicHeight = (baseWidth * imgH) / imgW;
+
+                        // Buat halaman dengan ukuran custom sesuai rasio asli gambar
+                        const page = finalPdf.addPage([baseWidth, dynamicHeight]);
+
+                        // Gambar diletakkan persis memenuhi halaman custom tanpa margin
+                        page.drawImage(pdfImage, {
+                            x: 0,
+                            y: 0,
+                            width: baseWidth,
+                            height: dynamicHeight,
+                        });
+                    }
+                }
+
+                btnText.innerText = "Menyimpan PDF...";
+                const pdfBytes = await finalPdf.save();
+                
+                const blob = new Blob([pdfBytes], { type: "application/pdf" });
+                const link = document.createElement('a');
+                link.href = URL.createObjectURL(blob);
+                
+                // Menggunakan Nama PDF Dari Input Prompt
+                link.download = `${pdfName.trim()}.pdf`;
+                link.click();
+                
+                showToast("Yeay! PDF Dinamis Berhasil Dibuat.", 'success');
+
+            } catch (error) {
+                console.error(error);
+                showToast("Gagal memproses file.", 'error');
+            } finally {
+                btn.disabled = false;
+                loader.style.display = 'none';
+                btnText.innerText = "Convert ke PDF (Panjang Dinamis) 🚀";
+            }
+        });
+    </script>
+</body>
+</html>
