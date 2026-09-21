@@ -184,26 +184,44 @@
                 </div>
             </div>
 
-            <!-- Clickable Info Quality (Replaces Compress settings) -->
+            <!-- Interaktif Selectable Quality Options -->
             <div class="mb-6 p-5 rounded-2xl border border-blue-100 bg-blue-50/70">
                 <h3 class="text-sm font-bold text-blue-900 mb-3 flex items-center gap-2">
                     <svg class="w-4 h-4 text-blue-600" fill="currentColor" viewBox="0 0 24 24"><path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/></svg>
-                    Info Kualitas (Klik Untuk Detail)
+                    Pilihan Kualitas (Pilih Salah Satu)
                 </h3>
                 <div class="grid grid-cols-1 sm:grid-cols-3 gap-3">
-                    <button onclick="showToast('Opsi ini untuk HD dan kompres. (Fitur kompres telah dihapus sesuai permintaan!)', 'info')" class="flex flex-col items-start gap-1 p-3 border border-blue-200 bg-white rounded-xl hover:border-blue-400 hover:bg-blue-50 transition-colors shadow-sm text-left">
-                        <span class="font-semibold text-slate-800 text-sm">HD & Kompres</span>
-                        <span class="text-xs text-slate-500">Lihat detail info</span>
-                    </button>
-                    <button onclick="showToast('Ini buat HD maxx - Kualitas sangat tinggi untuk menjaga kejelasan gambar.', 'info')" class="flex flex-col items-start gap-1 p-3 border border-blue-200 bg-white rounded-xl hover:border-blue-400 hover:bg-blue-50 transition-colors shadow-sm text-left">
-                        <span class="font-semibold text-slate-800 text-sm">HD Maxx</span>
-                        <span class="text-xs text-slate-500">Lihat detail info</span>
-                    </button>
-                    <button onclick="showToast('Super maxx HD, sampai jernih keliatan pori! Resolusi 100% Mentah Terjaga.', 'info')" class="flex flex-col items-start gap-1 p-3 border border-blue-400 bg-blue-50 rounded-xl hover:border-blue-500 hover:bg-blue-100 transition-colors shadow-sm text-left relative overflow-hidden">
-                        <span class="absolute top-0 right-0 bg-blue-500 text-white text-[10px] px-2 py-0.5 rounded-bl-lg font-bold">AKTIF</span>
-                        <span class="font-bold text-blue-900 text-sm">Super Maxx HD</span>
-                        <span class="text-xs text-blue-600">Lihat detail info</span>
-                    </button>
+                    
+                    <!-- Option 1: HD -->
+                    <label class="cursor-pointer relative group">
+                        <input type="radio" name="quality" value="hd" class="peer sr-only" onchange="showToast('Opsi ini untuk HD biasa. (Fitur kompres telah dihapus sesuai permintaan!)', 'info')">
+                        <div class="h-full flex flex-col items-start gap-1 p-3 border border-blue-200 bg-white rounded-xl peer-checked:border-blue-400 peer-checked:bg-blue-50 transition-all shadow-sm group-hover:border-blue-300">
+                            <span class="font-bold text-slate-700 peer-checked:text-blue-900 text-sm transition-colors">HD Biasa</span>
+                            <span class="text-xs text-slate-500 peer-checked:text-blue-600 transition-colors">Klik untuk pilih</span>
+                        </div>
+                        <span class="absolute top-0 right-0 bg-blue-500 text-white text-[10px] px-2 py-0.5 rounded-bl-lg rounded-tr-xl font-bold opacity-0 peer-checked:opacity-100 transition-opacity">AKTIF</span>
+                    </label>
+
+                    <!-- Option 2: HD Maxx -->
+                    <label class="cursor-pointer relative group">
+                        <input type="radio" name="quality" value="hdmaxx" class="peer sr-only" onchange="showToast('Ini buat HD maxx - Kualitas sangat tinggi untuk menjaga kejelasan gambar.', 'info')">
+                        <div class="h-full flex flex-col items-start gap-1 p-3 border border-blue-200 bg-white rounded-xl peer-checked:border-blue-400 peer-checked:bg-blue-50 transition-all shadow-sm group-hover:border-blue-300">
+                            <span class="font-bold text-slate-700 peer-checked:text-blue-900 text-sm transition-colors">HD Maxx</span>
+                            <span class="text-xs text-slate-500 peer-checked:text-blue-600 transition-colors">Klik untuk pilih</span>
+                        </div>
+                        <span class="absolute top-0 right-0 bg-blue-500 text-white text-[10px] px-2 py-0.5 rounded-bl-lg rounded-tr-xl font-bold opacity-0 peer-checked:opacity-100 transition-opacity">AKTIF</span>
+                    </label>
+
+                    <!-- Option 3: Super Maxx HD (Default) -->
+                    <label class="cursor-pointer relative group">
+                        <input type="radio" name="quality" value="supermaxx" class="peer sr-only" onchange="showToast('Super maxx HD, sampai jernih keliatan pori! Resolusi 100% Mentah Terjaga.', 'info')" checked>
+                        <div class="h-full flex flex-col items-start gap-1 p-3 border border-blue-200 bg-white rounded-xl peer-checked:border-blue-400 peer-checked:bg-blue-50 transition-all shadow-sm group-hover:border-blue-300">
+                            <span class="font-bold text-slate-700 peer-checked:text-blue-900 text-sm transition-colors">Super Maxx HD</span>
+                            <span class="text-xs text-slate-500 peer-checked:text-blue-600 transition-colors">Klik untuk pilih</span>
+                        </div>
+                        <span class="absolute top-0 right-0 bg-blue-500 text-white text-[10px] px-2 py-0.5 rounded-bl-lg rounded-tr-xl font-bold opacity-0 peer-checked:opacity-100 transition-opacity">AKTIF</span>
+                    </label>
+
                 </div>
             </div>
 
@@ -253,11 +271,9 @@
                 icon.innerHTML = '<svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path></svg>';
             }
             
-            // Waktu toast lebih lama untuk info membaca
             setTimeout(() => { toast.classList.remove('show'); }, type === 'info' ? 5000 : 3000);
         }
 
-        // Initialize Sortable for drag-and-drop ordering
         new Sortable(queueEl, {
             animation: 200,
             handle: '.drag-handle',
@@ -406,7 +422,6 @@
             // Meminta Nama PDF Sebelum Mulai Proses
             let pdfName = prompt("Ketik nama file PDF yang ingin disimpan:", "HQRUCHYO_Custom");
             
-            // Jika user klik cancel atau kosongkan nama
             if (pdfName === null || pdfName.trim() === "") {
                 showToast("Proses dibatalkan. Nama PDF harus diisi!", 'error');
                 return;
@@ -422,8 +437,6 @@
             try {
                 const { PDFDocument } = PDFLib;
                 const finalPdf = await PDFDocument.create();
-
-                // Standard base width for webtoon/comics in points (e.g. 595.28 points width ~ A4 width)
                 const baseWidth = 595.28;
 
                 for (let i = 0; i < filesData.length; i++) {
@@ -435,7 +448,7 @@
                         const copiedPages = await finalPdf.copyPages(existingPdf, existingPdf.getPageIndices());
                         copiedPages.forEach(page => finalPdf.addPage(page));
                     } else {
-                        // Kualitas selalu 100% Mentah (Compress dihapus)
+                        // Tidak ada fitur kompres, 100% mentah!
                         let finalBuffer = file.data;
                         let pdfImage;
                         
@@ -449,18 +462,12 @@
                             pdfImage = await finalPdf.embedJpg(finalBuffer);
                         }
 
-                        // Dapatkan dimensi asli pixel gambar
                         const imgW = pdfImage.width;
                         const imgH = pdfImage.height;
-
-                        // HITUNG TINGGI HALAMAN PDF SECARA DINAMIS (CUSTOM HEIGHT)
-                        // Agar gambar panjang ke bawah (seperti webtoon) tidak terpotong sama sekali
                         const dynamicHeight = (baseWidth * imgH) / imgW;
 
-                        // Buat halaman dengan ukuran custom sesuai rasio asli gambar
                         const page = finalPdf.addPage([baseWidth, dynamicHeight]);
 
-                        // Gambar diletakkan persis memenuhi halaman custom tanpa margin
                         page.drawImage(pdfImage, {
                             x: 0,
                             y: 0,
@@ -477,7 +484,6 @@
                 const link = document.createElement('a');
                 link.href = URL.createObjectURL(blob);
                 
-                // Menggunakan Nama PDF Dari Input Prompt
                 link.download = `${pdfName.trim()}.pdf`;
                 link.click();
                 
