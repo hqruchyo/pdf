@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>HQRUCHYO - Webtoon & Image to Custom PDF</title>
+    <title>HQRUCHYO PDF</title>
     <!-- Tailwind CSS -->
     <script src="https://cdn.tailwindcss.com"></script>
     <!-- pdf-lib -->
@@ -12,7 +12,7 @@
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
     <!-- SortableJS -->
     <script src="https://cdn.jsdelivr.net/npm/sortablejs@latest/Sortable.min.js"></script>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;900&display=swap" rel="stylesheet">
     <style>
         body { font-family: 'Inter', sans-serif; margin: 0; padding: 0; min-height: 100vh; overflow-x: hidden; }
         
@@ -55,16 +55,6 @@
             100% { right: 110%; transform: translateY(0); }
         }
 
-        /* Seaweed Sway */
-        .seaweed {
-            position: absolute; bottom: 0; transform-origin: bottom center;
-            animation: sway 3s infinite alternate ease-in-out;
-        }
-        @keyframes sway {
-            from { transform: rotate(-8deg); }
-            to { transform: rotate(8deg); }
-        }
-
         /* UI Styles */
         .main-card { background: rgba(255, 255, 255, 0.92); backdrop-filter: blur(10px); }
         .drop-zone { border: 2px dashed #93c5fd; transition: all 0.2s ease; background: rgba(248, 250, 252, 0.7); }
@@ -82,13 +72,18 @@
         .queue-container::-webkit-scrollbar { width: 6px; }
         .queue-container::-webkit-scrollbar-track { background: transparent; }
         .queue-container::-webkit-scrollbar-thumb { background: #bae6fd; border-radius: 10px; }
+
+        /* Tabs */
+        .tab-btn { transition: all 0.3s ease; }
+        .tab-active { border-bottom: 3px solid #2563eb; color: #1e3a8a; background-color: #eff6ff; font-weight: 700; }
+        .tab-inactive { border-bottom: 3px solid transparent; color: #64748b; background-color: transparent; font-weight: 500; }
+        .tab-inactive:hover { color: #3b82f6; background-color: #f8fafc; }
     </style>
 </head>
 <body class="text-slate-800 flex flex-col items-center py-8 px-4 sm:px-6 relative">
 
-    <!-- CSS Animated Background (No Emojis!) -->
+    <!-- CSS Animated Background -->
     <div id="ocean-bg">
-        <!-- Bubbles -->
         <div class="bubble" style="width: 25px; height: 25px; left: 15%; animation-duration: 8s; animation-delay: 1s;"></div>
         <div class="bubble" style="width: 15px; height: 15px; left: 40%; animation-duration: 6s; animation-delay: 3s;"></div>
         <div class="bubble" style="width: 30px; height: 30px; left: 60%; animation-duration: 10s; animation-delay: 0s;"></div>
@@ -111,39 +106,6 @@
                 <path d="M40,40 Q45,60 40,80" stroke="#c4b5fd" fill="none" stroke-width="3" opacity="0.8"/>
             </svg>
         </div>
-
-        <!-- Fishes -->
-        <div class="fish-l2r" style="top: 30%; animation-duration: 15s;">
-            <svg width="40" height="20" viewBox="0 0 40 20">
-              <ellipse cx="25" cy="10" rx="15" ry="7" fill="#60a5fa" />
-              <polygon points="0,4 0,16 12,10" fill="#60a5fa" />
-            </svg>
-        </div>
-        <div class="fish-r2l" style="top: 75%; animation-duration: 18s; animation-delay: 4s;">
-            <svg width="40" height="20" viewBox="0 0 40 20">
-              <ellipse cx="15" cy="10" rx="15" ry="7" fill="#818cf8" />
-              <polygon points="40,4 40,16 28,10" fill="#818cf8" />
-            </svg>
-        </div>
-
-        <!-- Seaweeds & Corals -->
-        <div class="seaweed" style="left: 8%;">
-            <svg width="40" height="120" viewBox="0 0 40 120">
-                <path d="M20,120 Q0,90 20,60 T20,0" stroke="#10b981" fill="none" stroke-width="6" stroke-linecap="round"/>
-                <path d="M20,100 Q35,80 15,50" stroke="#34d399" fill="none" stroke-width="4" stroke-linecap="round"/>
-            </svg>
-        </div>
-        <div class="seaweed" style="left: 15%; animation-delay: 0.5s;">
-            <svg width="30" height="90" viewBox="0 0 30 90">
-                <path d="M15,90 Q30,60 15,30 T15,0" stroke="#059669" fill="none" stroke-width="5" stroke-linecap="round"/>
-            </svg>
-        </div>
-        <div class="seaweed" style="right: 12%;">
-            <svg width="45" height="130" viewBox="0 0 45 130">
-                <path d="M22,130 Q5,100 22,70 T22,10" stroke="#10b981" fill="none" stroke-width="7" stroke-linecap="round"/>
-                <path d="M22,110 Q40,90 20,60" stroke="#34d399" fill="none" stroke-width="5" stroke-linecap="round"/>
-            </svg>
-        </div>
     </div>
 
     <!-- Toast Notification -->
@@ -155,13 +117,22 @@
     <!-- Main Content -->
     <div class="w-full max-w-4xl main-card rounded-3xl shadow-2xl border border-white/50 overflow-hidden relative z-10">
         
-        <!-- Headers Setup -->
+        <!-- Header Setup -->
         <div class="bg-gradient-to-r from-blue-900 to-slate-900 p-8 text-center text-white relative">
-            <h2 class="text-xl md:text-2xl font-black text-blue-300 tracking-[0.2em] mb-1">HQRUCHYO PDF</h2>
-            <h1 class="text-3xl sm:text-4xl font-bold flex items-center justify-center gap-3 drop-shadow-md">
-                Webtoon & Image to Custom PDF
+            <h1 class="text-3xl sm:text-4xl md:text-5xl font-black text-blue-300 tracking-[0.2em] mb-1 drop-shadow-lg">
+                HQRUCHYO PDF
             </h1>
             <p class="text-blue-100/80 text-sm mt-3 italic max-w-lg mx-auto">hawo ini web pdf buatan heilnox on tele, karena aku malas buat pdf hhwok.</p>
+        </div>
+
+        <!-- Mode Tabs -->
+        <div class="flex border-b border-blue-100">
+            <button id="btnTabMake" onclick="switchMode('make')" class="tab-btn tab-active flex-1 py-4 text-center text-sm sm:text-base">
+                [+] Buat PDF Baru
+            </button>
+            <button id="btnTabCompress" onclick="switchMode('compress')" class="tab-btn tab-inactive flex-1 py-4 text-center text-sm sm:text-base">
+                [><] Kompres PDF
+            </button>
         </div>
 
         <div class="p-6 sm:p-8">
@@ -172,31 +143,30 @@
                     <div class="w-12 h-12 bg-white rounded-full shadow-sm flex items-center justify-center mb-3 pointer-events-none">
                         <svg class="h-6 w-6 text-blue-600" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/></svg>
                     </div>
-                    <span class="text-base font-semibold text-slate-700 pointer-events-none">Pilih banyak file atau tarik ke sini</span>
-                    <p class="text-sm text-slate-500 mt-1 pointer-events-none">Mendukung Gambar Panjang (Webtoon), JPG, PNG, PDF, & ZIP</p>
+                    <span id="dropZoneTitle" class="text-base font-semibold text-slate-700 pointer-events-none">Pilih file atau tarik ke sini</span>
+                    <p id="dropZoneDesc" class="text-sm text-slate-500 mt-1 pointer-events-none">Mendukung Gambar, PDF, & ZIP</p>
                     <input type="file" id="fileInput" class="hidden" accept=".jpg,.jpeg,.png,.pdf,.zip" multiple>
                 </div>
 
                 <div class="border border-blue-200/60 rounded-2xl p-6 text-center hover:bg-blue-50/50 transition-colors bg-white/50 relative cursor-pointer flex flex-col justify-center items-center h-44 shadow-sm" onclick="promptDriveUrl()">
                     <svg class="w-10 h-10 mb-3 text-blue-500 pointer-events-none" fill="currentColor" viewBox="0 0 24 24"><path d="M19.35 10.04C18.67 6.59 15.64 4 12 4 9.11 4 6.6 5.64 5.36 8.04 2.34 8.36 0 10.91 0 14c0 3.31 2.69 6 6 6h13c2.76 0 5-2.24 5-5 0-2.64-2.05-4.78-4.65-4.96zM14 13v4h-4v-4H7l5-5 5 5h-3z"/></svg>
-                    <span class="text-sm font-semibold text-slate-700">Link Cloud / Drive</span>
-                    <span class="text-xs text-slate-500 mt-1">Ambil langsung via URL</span>
+                    <span class="text-sm font-semibold text-slate-700">Link URL File</span>
+                    <span class="text-xs text-slate-500 mt-1">Ambil langsung via Link</span>
                 </div>
             </div>
 
-            <!-- Single Quality Option -->
+            <!-- Single Quality Option (Always Visible) -->
             <div class="mb-6 p-5 rounded-2xl border border-blue-100 bg-blue-50/70">
                 <h3 class="text-sm font-bold text-blue-900 mb-3 flex items-center gap-2">
                     <svg class="w-4 h-4 text-blue-600" fill="currentColor" viewBox="0 0 24 24"><path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/></svg>
-                    Kualitas Render Gambar
+                    Kualitas Render File
                 </h3>
                 <div class="grid grid-cols-1">
-                    <!-- Option: HD Maxx Only -->
                     <div class="relative cursor-default">
                         <div class="w-full flex flex-col sm:flex-row sm:items-center justify-between gap-2 p-4 border-2 border-blue-400 bg-blue-50 rounded-xl shadow-sm">
                             <div>
                                 <span class="font-bold text-blue-900 text-base block mb-1">HD Maxx (Super Jernih)</span>
-                                <span class="text-sm text-blue-700 block">Kualitas sangat tinggi untuk menjaga kejelasan gambar sampai jernih kelihatan pori. Resolusi asli 100% mentah terjaga!</span>
+                                <span id="hdDesc" class="text-sm text-blue-700 block">Kualitas sangat tinggi untuk menjaga kejelasan gambar sampai jernih kelihatan pori. Resolusi asli 100% mentah terjaga!</span>
                             </div>
                         </div>
                         <span class="absolute top-0 right-0 bg-blue-500 text-white text-[10px] px-3 py-1 rounded-bl-lg rounded-tr-xl font-bold tracking-wide">SELALU AKTIF</span>
@@ -214,7 +184,7 @@
                 <div class="queue-container max-h-80 overflow-y-auto p-3">
                     <div id="emptyState" class="text-center py-12 text-slate-400 flex flex-col items-center">
                         <svg class="w-12 h-12 mb-3 opacity-40 text-blue-300" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 13h6m-3-3v6m5 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path></svg>
-                        Belum ada file yang dipilih. Seret file atau klik area di atas.
+                        Belum ada file yang dimasukkan.
                     </div>
                     <ul id="fileQueue" class="space-y-2"></ul>
                 </div>
@@ -222,17 +192,21 @@
 
             <button id="processBtn" class="w-full flex justify-center items-center gap-3 py-4 px-4 rounded-2xl shadow-lg shadow-blue-500/30 text-lg font-bold text-white bg-blue-600 hover:bg-blue-700 transition-all disabled:bg-slate-300 disabled:shadow-none disabled:text-slate-500 disabled:cursor-not-allowed">
                 <div class="loader" id="btnLoader"></div>
-                <span id="btnText">Convert ke PDF (Panjang Dinamis) 🚀</span>
+                <span id="btnText">Convert ke PDF //--</span>
             </button>
         </div>
     </div>
 
     <script>
         let filesData = []; 
+        let currentMode = 'make'; // 'make' atau 'compress'
+
         const queueEl = document.getElementById('fileQueue');
         const emptyState = document.getElementById('emptyState');
         const fileCount = document.getElementById('fileCount');
+        const fileInput = document.getElementById('fileInput');
 
+        // Fungsi Toast
         function showToast(msg, type = 'success') {
             const toast = document.getElementById('toast');
             const icon = document.getElementById('toastIcon');
@@ -249,10 +223,46 @@
                 toast.className = 'fixed bottom-6 left-1/2 transform -translate-x-1/2 z-50 px-6 py-3 rounded-full shadow-2xl font-semibold text-white text-center flex items-center gap-2 show bg-emerald-500';
                 icon.innerHTML = '<svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path></svg>';
             }
-            
             setTimeout(() => { toast.classList.remove('show'); }, type === 'info' ? 5000 : 3000);
         }
 
+        // Switch Mode Logic
+        function switchMode(mode) {
+            currentMode = mode;
+            clearQueue();
+            
+            const btnTabMake = document.getElementById('btnTabMake');
+            const btnTabCompress = document.getElementById('btnTabCompress');
+            const title = document.getElementById('dropZoneTitle');
+            const desc = document.getElementById('dropZoneDesc');
+            const hdDesc = document.getElementById('hdDesc');
+            const mainBtn = document.getElementById('btnText');
+
+            if (mode === 'make') {
+                btnTabMake.className = 'tab-btn tab-active flex-1 py-4 text-center text-sm sm:text-base';
+                btnTabCompress.className = 'tab-btn tab-inactive flex-1 py-4 text-center text-sm sm:text-base';
+                
+                title.innerText = "Pilih banyak file atau tarik ke sini";
+                desc.innerText = "Mendukung Gambar Panjang, JPG, PNG, PDF, & ZIP";
+                fileInput.accept = ".jpg,.jpeg,.png,.pdf,.zip";
+                hdDesc.innerText = "Kualitas sangat tinggi untuk menjaga kejelasan gambar sampai jernih kelihatan pori. Resolusi asli 100% mentah terjaga!";
+                mainBtn.innerText = "Convert ke PDF (Panjang Dinamis)";
+            } else {
+                btnTabCompress.className = 'tab-btn tab-active flex-1 py-4 text-center text-sm sm:text-base';
+                btnTabMake.className = 'tab-btn tab-inactive flex-1 py-4 text-center text-sm sm:text-base';
+                
+                title.innerText = "Pilih file PDF yang mau dikompres";
+                desc.innerText = "Hanya mendukung file format .PDF";
+                fileInput.accept = ".pdf";
+                hdDesc.innerText = "Size mengecil dengan membuang sampah metadata file. Resolusi gambar TIDAK diturunkan, jaminan HD Maxx!";
+                mainBtn.innerText = "Mulai Kompres PDF";
+            }
+        }
+
+        // Set default state on load
+        window.onload = () => switchMode('make');
+
+        // Drag & Drop Init
         new Sortable(queueEl, {
             animation: 200,
             handle: '.drag-handle',
@@ -278,23 +288,23 @@
             dropZone.addEventListener(eventName, () => dropZone.classList.remove('dragover'), false);
         });
 
-        dropZone.addEventListener('drop', (e) => {
-            handleFiles(e.dataTransfer.files);
-        });
-
-        document.getElementById('fileInput').addEventListener('change', (e) => {
-            handleFiles(e.target.files);
-            e.target.value = '';
-        });
+        dropZone.addEventListener('drop', (e) => handleFiles(e.dataTransfer.files));
+        fileInput.addEventListener('change', (e) => { handleFiles(e.target.files); e.target.value = ''; });
 
         async function handleFiles(files) {
             const fileArray = Array.from(files);
             if (fileArray.length === 0) return;
 
-            showToast(`Memproses ${fileArray.length} file...`, 'info');
+            showToast(`Memproses file...`, 'info');
             
             for (let file of fileArray) {
                 const ext = file.name.split('.').pop().toLowerCase();
+                
+                if (currentMode === 'compress' && ext !== 'pdf') {
+                    showToast(`Mode Kompres hanya menerima file PDF! (Dilewati: ${file.name})`, 'error');
+                    continue;
+                }
+
                 if (ext === 'zip') {
                     try {
                         const zip = new JSZip();
@@ -322,7 +332,7 @@
         }
 
         async function promptDriveUrl() {
-            const url = prompt("Masukkan Direct Link URL file gambar / PDF:");
+            const url = prompt("Masukkan Direct Link URL file:");
             if (!url) return;
             try {
                 showToast("Mengunduh dari URL...", 'info');
@@ -332,7 +342,13 @@
                 let ext = 'jpg';
                 if (url.toLowerCase().endsWith('.pdf')) ext = 'pdf';
                 else if (url.toLowerCase().endsWith('.png')) ext = 'png';
-                addFileToQueue(`Cloud_File.${ext}`, arrayBuffer, ext);
+                
+                if (currentMode === 'compress' && ext !== 'pdf') {
+                    showToast("Mode Kompres hanya untuk PDF!", 'error');
+                    return;
+                }
+                
+                addFileToQueue(`URL_Download.${ext}`, arrayBuffer, ext);
                 renderQueueUI();
                 showToast("Berhasil ditambahkan!");
             } catch (err) {
@@ -367,7 +383,7 @@
                 li.innerHTML = `
                     <div class="flex items-center gap-3 overflow-hidden flex-1">
                         <div class="drag-handle p-1.5 text-slate-400 hover:text-blue-500 cursor-grab active:cursor-grabbing">
-                            <svg class="w-5 h-5" fill="currentColor" viewBox="0 0 24 24"><path d="M11 18c0 1.1-.9 2-2 2s-2-.9-2-2 .9-2 2-2 2 .9 2 2zm-2-8c-1.1 0-2 .9-2 2s.9 2 2 2 2-.9 2-2-.9-2-2-2zm0-6c-1.1 0-2 .9-2 2s.9 2 2 2 2-.9 2-2-.9-2-2-2zm6 4c1.1 0 2-.9 2-2s-.9-2-2-2-2 .9-2 2 .9 2 2 2zm0 2c-1.1 0-2 .9-2 2s.9 2 2 2 2-.9 2-2-.9-2-2-2zm0 6c-1.1 0-2 .9-2 2s.9 2 2 2 2-.9 2-2-.9-2-2-2z"/></svg>
+                            <svg class="w-5 h-5" fill="currentColor" viewBox="0 0 24 24"><path d="M11 18c0 1.1-.9 2-2 2s-2-.9-2-2 .9-2 2-2 2 .9-2 2zm-2-8c-1.1 0-2 .9-2 2s.9 2 2 2 2-.9 2-2-.9-2-2-2zm0-6c-1.1 0-2 .9-2 2s.9 2 2 2 2-.9 2-2-.9-2-2-2zm6 4c1.1 0 2-.9 2-2s-.9-2-2-2-2 .9-2 2 .9 2 2 2zm0 2c-1.1 0-2 .9-2 2s.9 2 2 2 2-.9 2-2-.9-2-2-2zm0 6c-1.1 0-2 .9-2 2s.9 2 2 2 2-.9 2-2-.9-2-2-2z"/></svg>
                         </div>
                         <div class="w-10 h-10 flex-shrink-0 flex items-center justify-center rounded-lg ${badgeColor} text-white font-bold text-xs uppercase">
                             ${file.ext}
@@ -392,81 +408,89 @@
             renderQueueUI();
         }
 
+        // Proses Utama (Make PDF atau Compress PDF)
         document.getElementById('processBtn').addEventListener('click', async () => {
             if (filesData.length === 0) {
-                showToast("Antrean kosong! Masukkan gambar/webtoon dulu.", 'error');
+                showToast("Antrean kosong!", 'error');
                 return;
             }
 
-            // Meminta Nama PDF Sebelum Mulai Proses
-            let pdfName = prompt("Ketik nama file PDF yang ingin disimpan:", "HQRUCHYO_Custom");
+            let defaultName = currentMode === 'make' ? 'HQRUCHYO_Custom' : 'HQRUCHYO_Compressed';
+            let pdfName = prompt("Ketik nama file PDF yang ingin disimpan:", defaultName);
             
             if (pdfName === null || pdfName.trim() === "") {
-                showToast("Proses dibatalkan. Nama PDF harus diisi!", 'error');
+                showToast("Proses dibatalkan. Nama harus diisi!", 'error');
                 return;
             }
 
             const btn = document.getElementById('processBtn');
             const loader = document.getElementById('btnLoader');
             const btnText = document.getElementById('btnText');
+            const originalBtnText = btnText.innerText;
             
             btn.disabled = true;
             loader.style.display = 'block';
 
             try {
                 const { PDFDocument } = PDFLib;
-                const finalPdf = await PDFDocument.create();
-                const baseWidth = 595.28;
 
-                for (let i = 0; i < filesData.length; i++) {
-                    const file = filesData[i];
-                    btnText.innerText = `Memproses (${i + 1}/${filesData.length})...`;
-
-                    if (file.type === 'pdf') {
+                // ==== MODE: KOMPRES PDF ====
+                if (currentMode === 'compress') {
+                    // Jika ada banyak PDF di queue, kita gabungkan lalu kompres struktural
+                    const finalPdf = await PDFDocument.create();
+                    
+                    for (let i = 0; i < filesData.length; i++) {
+                        const file = filesData[i];
+                        btnText.innerText = `Mengkompres (${i + 1}/${filesData.length})...`;
+                        
                         const existingPdf = await PDFDocument.load(file.data);
                         const copiedPages = await finalPdf.copyPages(existingPdf, existingPdf.getPageIndices());
                         copiedPages.forEach(page => finalPdf.addPage(page));
-                    } else {
-                        // Tidak ada fitur kompres, 100% mentah!
-                        let finalBuffer = file.data;
-                        let pdfImage;
-                        
-                        try {
-                            if (file.ext === 'png') {
-                                pdfImage = await finalPdf.embedPng(finalBuffer);
-                            } else {
+                    }
+                    
+                    btnText.innerText = "Menyimpan HD Maxx...";
+                    // Menyimpan menggunakan useObjectStreams untuk optimasi struktural tanpa menyentuh kualitas gambar
+                    const pdfBytes = await finalPdf.save({ useObjectStreams: true });
+                    triggerDownload(pdfBytes, pdfName.trim());
+                    showToast("PDF Berhasil Dikompres & Digabung (HD Maxx)!", 'success');
+                } 
+                // ==== MODE: BUAT PDF BARU ====
+                else {
+                    const finalPdf = await PDFDocument.create();
+                    const baseWidth = 595.28;
+
+                    for (let i = 0; i < filesData.length; i++) {
+                        const file = filesData[i];
+                        btnText.innerText = `Memproses (${i + 1}/${filesData.length})...`;
+
+                        if (file.type === 'pdf') {
+                            const existingPdf = await PDFDocument.load(file.data);
+                            const copiedPages = await finalPdf.copyPages(existingPdf, existingPdf.getPageIndices());
+                            copiedPages.forEach(page => finalPdf.addPage(page));
+                        } else {
+                            let finalBuffer = file.data;
+                            let pdfImage;
+                            try {
+                                if (file.ext === 'png') pdfImage = await finalPdf.embedPng(finalBuffer);
+                                else pdfImage = await finalPdf.embedJpg(finalBuffer);
+                            } catch(e) {
                                 pdfImage = await finalPdf.embedJpg(finalBuffer);
                             }
-                        } catch(e) {
-                            pdfImage = await finalPdf.embedJpg(finalBuffer);
+
+                            const imgW = pdfImage.width;
+                            const imgH = pdfImage.height;
+                            const dynamicHeight = (baseWidth * imgH) / imgW;
+
+                            const page = finalPdf.addPage([baseWidth, dynamicHeight]);
+                            page.drawImage(pdfImage, { x: 0, y: 0, width: baseWidth, height: dynamicHeight });
                         }
-
-                        const imgW = pdfImage.width;
-                        const imgH = pdfImage.height;
-                        const dynamicHeight = (baseWidth * imgH) / imgW;
-
-                        const page = finalPdf.addPage([baseWidth, dynamicHeight]);
-
-                        page.drawImage(pdfImage, {
-                            x: 0,
-                            y: 0,
-                            width: baseWidth,
-                            height: dynamicHeight,
-                        });
                     }
-                }
 
-                btnText.innerText = "Menyimpan PDF...";
-                const pdfBytes = await finalPdf.save();
-                
-                const blob = new Blob([pdfBytes], { type: "application/pdf" });
-                const link = document.createElement('a');
-                link.href = URL.createObjectURL(blob);
-                
-                link.download = `${pdfName.trim()}.pdf`;
-                link.click();
-                
-                showToast("Yeay! PDF Dinamis Berhasil Dibuat.", 'success');
+                    btnText.innerText = "Menyimpan PDF...";
+                    const pdfBytes = await finalPdf.save();
+                    triggerDownload(pdfBytes, pdfName.trim());
+                    showToast("Yeay! PDF Dinamis Berhasil Dibuat.", 'success');
+                }
 
             } catch (error) {
                 console.error(error);
@@ -474,9 +498,17 @@
             } finally {
                 btn.disabled = false;
                 loader.style.display = 'none';
-                btnText.innerText = "Convert ke PDF (Panjang Dinamis) 🚀";
+                btnText.innerText = originalBtnText;
             }
         });
+
+        function triggerDownload(pdfBytes, filename) {
+            const blob = new Blob([pdfBytes], { type: "application/pdf" });
+            const link = document.createElement('a');
+            link.href = URL.createObjectURL(blob);
+            link.download = `${filename}.pdf`;
+            link.click();
+        }
     </script>
 </body>
 </html>
